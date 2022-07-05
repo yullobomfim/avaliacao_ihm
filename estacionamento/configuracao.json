@@ -1,0 +1,58 @@
+{
+    "clientes": [
+        {
+            "nome": "Ayrton Senna",
+            "mensalista": true,
+            "status": "Pago", 
+            "fotos": [
+                "./faces/ayrton1.jpeg",
+                "./faces/ayrton2.jpeg",
+                "./faces/ayrton3.jpeg"
+            ],
+            "vagas": [
+                "A1",
+                "A2",
+                "A3"
+            ]
+        },
+        {
+            "nome": "Rubinho Barichello",
+            "mensalista": true,
+            "status": "Pago", 
+            "fotos": [
+                "./faces/rubinho1.jpeg",
+                "./faces/rubinho2.jpeg",
+                "./faces/rubinho3.jpeg"                
+            ],
+            "vagas": [
+                "B1",
+                "B2",
+                "B3"
+            ]
+        },
+        {
+            "nome": "Roberto Carlos",
+            "mensalista": false,
+            "status": "Pagamento em Aberto", 
+            "fotos": [
+                "./faces/roberto1.jpeg",
+                "./faces/roberto2.jpeg",
+                "./faces/roberto3.jpeg"                
+            ],
+            "vagas": [
+            ]
+        },
+        {
+            "nome": "Zeca Pagodinho",
+            "mensalista": false,
+            "status": "Pagamento em Aberto", 
+            "fotos": [
+                "./faces/zeca1.jpeg",
+                "./faces/zeca2.jpeg",
+                "./faces/zeca3.jpeg"                
+            ],
+            "vagas": [
+            ]
+        }     
+    ]
+}
