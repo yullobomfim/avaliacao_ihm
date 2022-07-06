@@ -30,7 +30,7 @@ PROBABILIDADE_B3 = 1
 PROBABILIDADE_DE_SER_AUTORIZADO = 30
 PROBABILIDADE_DE_SER_LIBERADO = 100 - PROBABILIDADE_DE_SER_AUTORIZADO
 PROBABILIDADE_NECESSIDADE_DE_VAGA = 5
-PROBABILIDADE_DE_LIBERACAO_DA_VAGA = 5
+PROBABILIDADE_DE_LIBERACAO_DA_VAGA = 30
 
 CAPACIDADE_MAXIMA_ESTACIONAMENTO = 10
 
@@ -47,11 +47,9 @@ def carregar():
     with open(ARQUIVO_CONFIGURACAO, "r") as arquivo_configuracao:
         configuracao = json.load(arquivo_configuracao)
         if configuracao:
-            print("--------------------------------------------------------------------------")
             print("----------------ESTACIONAMENTO DIGITAL INTELIGENTE------------------------")
             print("Arquivos de configuração carregados...")
             print("Iniciando o simulador de eventos...")
-            print("--------------------------------------------------------------------------")
 
     global clientes_reconhecidos
     clientes_reconhecidos = {}
@@ -76,6 +74,7 @@ def simular_estacionamento():
     motorista = {
         "foto": random.choice(FOTOS_MOTORISTAS),
         "cliente": None
+
     }
 
     return motorista
@@ -108,11 +107,11 @@ def reconhecer_cliente(motorista):
             motorista["cliente"]["nome"] = cliente["nome"]
             motorista["cliente"]["status"] = cliente["status"]
             motorista["cliente"]["vagas"] = random.choice(["A1", "A2", "A3", "B1", "B2", "B3"])
+            motorista["cliente"]["mensalista"] = cliente["mensalista"]
 
     return reconhecido, motorista
 
 def imprimir_cliente(cliente):
-    print("**************************************************************************")
     print("Nome:", cliente["cliente"]["nome"])
     print("Vaga:", cliente["cliente"]["vagas"])
     print("Status:", cliente["cliente"]["status"])
@@ -122,7 +121,7 @@ def reconhecer_motorista(env):
     global clientes_reconhecidos
 
     while True:
-        print("1- Verificando se o motorista é um cliente mensalista:", env.now)
+        print("Verificando se o motorista é um cliente mensalista:", env.now)
         motorista = simular_estacionamento()
         reconhecido, cliente = reconhecer_cliente(motorista)
         if reconhecido:
@@ -144,7 +143,7 @@ def identificar_autorizacao(env):
             print("verificando autorizacao de acesso", env.now)
             total_clientes_mensalistas = 0
             for id_atendimento, cliente in list(clientes_reconhecidos.items()):
-                autorizacao_reconhecida = (random.randint(1, 100) <= PROBABILIDADE_DE_SER_AUTORIZADO)
+                autorizacao_reconhecida = cliente["cliente"]["mensalista"]
                 if autorizacao_reconhecida:
                     cliente["mensalista"] = False
                     clientes_mensalistas[id_atendimento] = cliente
@@ -160,19 +159,17 @@ def identificar_autorizacao(env):
         else:
             yield env.timeout(1)
 
-def liberar_cliente(env):
+def verificar_vaga(env):
     global clientes_reconhecidos
 
     while True:
         if len(clientes_reconhecidos):
-            print("verificando a saída de clientes ...", env.now)
+            print("verificando Localização de vagas para os clientes ...", env.now)
             total_liberacoes = 0
             for id_atendimento, cliente in list(clientes_reconhecidos.items()):
-                cliente_liberado = (random.randint(1, 100) <= PROBABILIDADE_DE_SER_LIBERADO)
+                cliente_liberado = (random.randint(1, 10) <= PROBABILIDADE_DE_SER_LIBERADO)
                 if cliente_liberado:
-                    print("--------------------------------------------------------------------------")
-                    print("O cliente", cliente["cliente"]["nome"], "está saindo do estacionamento")
-                    print("--------------------------------------------------------------------------")
+                    print("O cliente", cliente["cliente"]["nome"], "está verificando a vaga ", cliente["cliente"]["vagas"])
                     clientes_reconhecidos.pop(id_atendimento)
 
                     total_liberacoes += 1
@@ -191,8 +188,7 @@ def disponibilizar_vagas(env):
 
     while True:
         if len(clientes_mensalistas):
-            print("--------------------------------------------------------------------------")
-            print("Disponibilizando vaga para os mensalistas ", env.now)
+            print("Identificar o local da vaga reservada para os mensalistas ", env.now)
             
             total_verificacoes_vagas = 0
             for cliente in clientes_mensalistas.values():
@@ -200,12 +196,9 @@ def disponibilizar_vagas(env):
                     tipo_vagas = cliente["cliente"]["vagas"]
                     tem_vagas = total_vagas[tipo_vagas]
                     if tem_vagas:
-                        print("--------------------------------------------------------------------------")
                         print("O cliente", cliente["cliente"]["nome"], "deve dirigir até a vaga", tipo_vagas )
                     else:
-                        print("--------------------------------------------------------------------------")
-                        print("não tem vagas do tipo", tipo_vagas, "para o cliente", cliente["cliente"]["nome"])
-                        print("Atenção", cliente["cliente"]["nome"], "não temos a vaga", tipo_vagas )
+                        print("Atenção", cliente["cliente"]["nome"], "não temos vagas", tipo_vagas )
 
                     cliente["mensalista"] = True
                     total_verificacoes_vagas += 1
@@ -254,7 +247,7 @@ def liberar_vaga(env):
     global clientes_em_vagas_reservadas
 
     while True:
-        if len( ):
+        if len(clientes_em_vagas_reservadas):
             print("verificando liberacao de Vagas", env.now)
 
             total_liberacoes_vagas = 0
@@ -281,7 +274,7 @@ if __name__ == "__main__":
     env = simpy.Environment()
     env.process(reconhecer_motorista(env))
     env.process(identificar_autorizacao(env))
-    env.process(liberar_cliente(env))
+    env.process(verificar_vaga(env))
     env.process(disponibilizar_vagas(env))
     env.process(reservar_vaga(env))
     env.process(liberar_vaga(env))

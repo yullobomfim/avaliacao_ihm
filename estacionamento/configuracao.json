@@ -39,8 +39,7 @@
                 "./faces/roberto2.jpeg",
                 "./faces/roberto3.jpeg"                
             ],
-            "vagas": [
-            ]
+            "vagas": "Cliente Avulso"
         },
         {
             "nome": "Zeca Pagodinho",
@@ -51,8 +50,7 @@
                 "./faces/zeca2.jpeg",
                 "./faces/zeca3.jpeg"                
             ],
-            "vagas": [
-            ]
+            "vagas": "Cliente Avulso"
         }     
     ]
 }
