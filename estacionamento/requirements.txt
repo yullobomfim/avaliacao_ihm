@@ -1,4 +1,0 @@
-opencv-python
-face_recognition
-simpy
-faker
