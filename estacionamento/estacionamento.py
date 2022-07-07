@@ -20,25 +20,20 @@ FOTOS_MOTORISTAS = [
 ]
 ARQUIVO_CONFIGURACAO = "./configuracao.json"
 
-PROBABILIDADE_A1 = 1
-PROBABILIDADE_A2 = 6
-PROBABILIDADE_A3 = 5
-PROBABILIDADE_B1 = 3
-PROBABILIDADE_B2 = 5
-PROBABILIDADE_B3 = 1
 
 PROBABILIDADE_DE_SER_AUTORIZADO = 30
 PROBABILIDADE_DE_SER_LIBERADO = 100 - PROBABILIDADE_DE_SER_AUTORIZADO
+
 PROBABILIDADE_NECESSIDADE_DE_VAGA = 5
 PROBABILIDADE_DE_LIBERACAO_DA_VAGA = 30
 
 CAPACIDADE_MAXIMA_ESTACIONAMENTO = 10
 
-TEMPO_ENTRE_CLIENTES = 20
-TEMPO_RECONHECIMENTO_AUTORIZACAO = 2
-TEMPO_VERIFICACAO_DISPONIBILIDADE_VAGAS = 20
-TEMPO_LIBERACAO_CLIENTE = 20
-TEMPO_LIBERACAO_VAGAS = 20
+TEMPO_ENTRE_CLIENTES = 150
+TEMPO_RECONHECIMENTO_AUTORIZACAO = 60
+TEMPO_VERIFICACAO_DISPONIBILIDADE_VAGAS = 60
+TEMPO_LIBERACAO_CLIENTE = 60
+TEMPO_LIBERACAO_VAGAS = 60
 
 def carregar():
     global configuracao
@@ -49,7 +44,7 @@ def carregar():
         if configuracao:
             print("----------------ESTACIONAMENTO DIGITAL INTELIGENTE------------------------")
             print("Arquivos de configuração carregados...")
-            print("Iniciando o simulador de eventos...")
+            print("Iniciando simulador de eventos...")
 
     global clientes_reconhecidos
     clientes_reconhecidos = {}
@@ -115,11 +110,13 @@ def reconhecer_motorista(env):
 
     while True:
         print("Verificando se o motorista é um cliente mensalista:", env.now)
+        
         motorista = simular_estacionamento()
         reconhecido, cliente = reconhecer_cliente(motorista)
         if reconhecido:
             id_atendimento = secrets.token_hex(nbytes=16).upper()
             clientes_reconhecidos[id_atendimento] = cliente
+            
             print("Motorista reconhecido, verificando os dados do Cliente ...")
             imprimir_cliente(cliente)
         else:
@@ -127,21 +124,23 @@ def reconhecer_motorista(env):
 
         yield env.timeout(TEMPO_ENTRE_CLIENTES)
 
-def identificar_autorizacao(env):
+def identificar_vagas(env):
     global clientes_reconhecidos
     global clientes_mensalistas
 
     while True:
         if len(clientes_reconhecidos):
-            print("verificando autorizacao de acesso", env.now)
+            print("verificando a localização das vagas do estacionamento", env.now)
+            
             total_clientes_mensalistas = 0
             for id_atendimento, cliente in list(clientes_reconhecidos.items()):
-                autorizacao_reconhecida = cliente["cliente"]["mensalista"]
-                if autorizacao_reconhecida:
+                mensalista_reconhecidos = cliente["cliente"]["mensalista"]
+                if mensalista_reconhecidos:
                     cliente["mensalista"] = False
                     clientes_mensalistas[id_atendimento] = cliente
                     clientes_reconhecidos.pop(id_atendimento)
-                    print(cliente["cliente"]["nome"], "está autorizado a estacionar na vaga", cliente["cliente"]["vagas"])
+                    
+                    print("A Vaga ",cliente["cliente"]["vagas"], "está disponivel para ", cliente["cliente"]["nome"])
                     total_clientes_mensalistas += 1
 
             timeout = 1
@@ -155,17 +154,19 @@ def identificar_autorizacao(env):
             yield env.timeout(1)
 
 def verificar_vaga(env):
-    global clientes_reconhecidos
+    global clientes_mensalistas
+    global configuracao
 
     while True:
-        if len(clientes_reconhecidos):
-            print("verificando Localização de vagas para os clientes ...", env.now)
+        if len(clientes_mensalistas):
+            print("verificando Localização das vagas...", env.now)
+            
             total_liberacoes = 0
-            for id_atendimento, cliente in list(clientes_reconhecidos.items()):
-                cliente_liberado = (random.randint(1, 10) <= PROBABILIDADE_DE_SER_LIBERADO)
+            for id_atendimento, cliente in list(clientes_mensalistas.items()):
+                cliente_liberado = (random.randint(1, 100) <= PROBABILIDADE_DE_SER_LIBERADO)
                 if cliente_liberado:
-                    print("O cliente", cliente["cliente"]["nome"], "está verificando a vaga ", cliente["cliente"]["vagas"])
-                    clientes_reconhecidos.pop(id_atendimento)
+                    print("O cliente", cliente["cliente"]["nome"], "pode utilizar a vaga ", cliente["cliente"]["vagas"])
+                    clientes_mensalistas.pop(id_atendimento)
 
                     total_liberacoes += 1
 
@@ -184,7 +185,7 @@ def disponibilizar_vagas(env):
 
     while True:
         if len(clientes_mensalistas):
-            print("Identificar vaga reservada para o cliente mensalista ", env.now)
+            print("Identificando a vaga reservada para os clientes mensalistas ", env.now)
             
             total_verificacoes_vagas = 0
             for cliente in clientes_mensalistas.values():
@@ -196,7 +197,7 @@ def disponibilizar_vagas(env):
                     else:
                         print("Atenção", cliente["cliente"]["nome"], "não temos vagas", tipo_vagas )
 
-                    cliente["mensalista"] = True
+                        cliente["mensalista"] = True
                     total_verificacoes_vagas += 1
 
             timeout = 1
@@ -213,7 +214,7 @@ def reservar_vaga(env):
 
     while True:
         if len(clientes_mensalistas):
-            print("Verificando Vagas para o cliente ", env.now)
+            print("Verificando Status dos clientes ", env.now)
 
             if len(clientes_em_vagas_reservadas) == CAPACIDADE_MAXIMA_ESTACIONAMENTO:
                 print("Não há vagas")
@@ -222,7 +223,7 @@ def reservar_vaga(env):
             else:
                 total_clientes_em_vagas_reservadas = 0
                 for id_atendimento, cliente in list(clientes_mensalistas.items()):
-                    necessita_vagas = (random.randint(1, 10) <= PROBABILIDADE_NECESSIDADE_DE_VAGA)
+                    necessita_vagas = (random.randint(1, 100) <= PROBABILIDADE_NECESSIDADE_DE_VAGA)
                     if necessita_vagas:
                         clientes_em_vagas_reservadas[id_atendimento] = cliente
                         clientes_mensalistas.pop(id_atendimento)
@@ -248,12 +249,12 @@ def liberar_vaga(env):
 
             total_liberacoes_vagas = 0
             for id_atendimento, cliente in list(clientes_em_vagas_reservadas.items()):
-                liberar_vaga = (random.randint(1, 10) <= PROBABILIDADE_DE_LIBERACAO_DA_VAGA)
+                liberar_vaga = (random.randint(1, 100) <= PROBABILIDADE_DE_LIBERACAO_DA_VAGA)
 
                 if liberar_vaga:
-                    print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                    print("O cliente", cliente["cliente"]["nome"], " está saindo e liberando uma Vaga")
                     print("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+                    print(cliente["cliente"]["nome"], " está saindo do estacionamento")
+                    print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
                     clientes_em_vagas_reservadas.pop(id_atendimento)
                     total_liberacoes_vagas += 1
 
@@ -269,9 +270,9 @@ if __name__ == "__main__":
 
     env = simpy.Environment()
     env.process(reconhecer_motorista(env))
-    env.process(identificar_autorizacao(env))
+    env.process(identificar_vagas(env))
     env.process(verificar_vaga(env))
     env.process(disponibilizar_vagas(env))
-    env.process(reservar_vaga(env))
-    env.process(liberar_vaga(env))
+    # env.process(reservar_vaga(env))
+    # env.process(liberar_vaga(env))
     env.run(until=10000)
