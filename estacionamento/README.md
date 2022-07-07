@@ -1,6 +1,6 @@
-# Sistema de Reconhecimento Facial
+# Avaliação IHM parte 1
 
-## Simulação de um Estacionamento Inteligente sensivel a contexto 
+## Simulação de um Estacionamento Inteligente sensivel a contexto:
 
     1 - O sistema faz o reconhecimento facial dos motoristas.
     2 - Verifica a reserva de vagas para os clientes autorizados.
