@@ -35,7 +35,7 @@ PROBABILIDADE_DE_LIBERACAO_DA_VAGA = 30
 CAPACIDADE_MAXIMA_ESTACIONAMENTO = 10
 
 TEMPO_ENTRE_CLIENTES = 20
-TEMPO_RECONHECIMENTO_AUTORIZACAO = 20
+TEMPO_RECONHECIMENTO_AUTORIZACAO = 2
 TEMPO_VERIFICACAO_DISPONIBILIDADE_VAGAS = 20
 TEMPO_LIBERACAO_CLIENTE = 20
 TEMPO_LIBERACAO_VAGAS = 20
@@ -61,14 +61,7 @@ def carregar():
     clientes_em_vagas_reservadas = {}
 
     global total_vagas
-    total_vagas = {
-        "A1": (random.randint(1, 10) <= PROBABILIDADE_A1),
-        "A2": (random.randint(1, 10) <= PROBABILIDADE_A2),
-        "A3": (random.randint(1, 10) <= PROBABILIDADE_A3),
-        "B1": (random.randint(1, 10) <= PROBABILIDADE_B1),
-        "B2": (random.randint(1, 10) <= PROBABILIDADE_B2),
-        "B3": (random.randint(1, 10) <= PROBABILIDADE_B3)
-    }
+    total_vagas = {}
 
 def simular_estacionamento():
     motorista = {
@@ -106,7 +99,7 @@ def reconhecer_cliente(motorista):
             motorista["cliente"] = {}
             motorista["cliente"]["nome"] = cliente["nome"]
             motorista["cliente"]["status"] = cliente["status"]
-            motorista["cliente"]["vagas"] = random.choice(["A1", "A2", "A3", "B1", "B2", "B3"])
+            motorista["cliente"]["vagas"] = cliente["vagas"]
             motorista["cliente"]["mensalista"] = cliente["mensalista"]
 
     return reconhecido, motorista
@@ -148,7 +141,7 @@ def identificar_autorizacao(env):
                     cliente["mensalista"] = False
                     clientes_mensalistas[id_atendimento] = cliente
                     clientes_reconhecidos.pop(id_atendimento)
-                    print("O cliente", cliente["cliente"]["nome"], "está autorizado a estacionar na vaga")
+                    print(cliente["cliente"]["nome"], "está autorizado a estacionar na vaga", cliente["cliente"]["vagas"])
                     total_clientes_mensalistas += 1
 
             timeout = 1
@@ -157,6 +150,8 @@ def identificar_autorizacao(env):
 
             yield env.timeout(timeout)
         else:
+            print(cliente["cliente"]["nome"], "Faça já sua assinatura e tenha uma vaga exclusiva")
+
             yield env.timeout(1)
 
 def verificar_vaga(env):
@@ -180,6 +175,7 @@ def verificar_vaga(env):
 
             yield env.timeout(timeout)
         else:
+            print(cliente["cliente"]["nome"], " é um cliente Avulso")
             yield env.timeout(1)
 
 def disponibilizar_vagas(env):
@@ -188,7 +184,7 @@ def disponibilizar_vagas(env):
 
     while True:
         if len(clientes_mensalistas):
-            print("Identificar o local da vaga reservada para os mensalistas ", env.now)
+            print("Identificar vaga reservada para o cliente mensalista ", env.now)
             
             total_verificacoes_vagas = 0
             for cliente in clientes_mensalistas.values():
