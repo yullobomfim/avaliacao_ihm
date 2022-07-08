@@ -1,0 +1,59 @@
+{
+    "clientes": [
+        {
+            "nome": "Ayrton Sena",
+            "status":"Pagamento efetuado", 
+            "fotos": [
+                "./fotos/ayrton1.jpeg",
+                "./fotos/ayrton2.jpeg",
+                "./fotos/ayrton3.jpeg"
+            ],
+            "vagas": [
+                "A1",
+                "A2",
+                "A3"
+            ],
+            "eh_mensalista": true
+        },
+        {
+            "nome": "Rubinho Barichello",
+            "status":"Pagamento efetuado", 
+            "fotos": [
+                "./fotos/rubinho1.jpeg",
+                "./fotos/rubinho2.jpeg",
+                "./fotos/rubinho3.jpeg"                
+    
+            ],
+            "vagas": [
+                "B1",
+                "B2",
+                "B3"
+            ],
+            "eh_mensalista": true
+        },
+        {
+            "nome": "Roberto Carlos",
+            "status":"Pagamento pendente", 
+            "fotos": [
+                "./fotos/roberto1.jpeg",
+                "./fotos/roberto2.jpeg",
+                "./fotos/roberto3.jpeg"                
+            ],
+            "vagas": [
+            ],
+            "eh_mensalista": false
+        },
+        {
+            "nome": "Zeca Pagodinho",
+            "status":"Pagamento pendente", 
+            "fotos": [
+                "./fotos/zeca1.jpeg",
+                "./fotos/zeca2.jpeg",
+                "./fotos/zeca3.jpeg"                
+            ],
+            "vagas": [
+            ],
+            "eh_mensalista": false
+        }             
+    ]
+}
